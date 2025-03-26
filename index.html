@@ -1,18 +1,119 @@
 <html>
-  <script crossorigin src="https://unpkg.com/@daily-co/daily-js"></script>
+  <head>
+    <script src="https://unpkg.com/@daily-co/daily-js"></script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        #user-info {
+  display: none;
+  background-color: #f8f9fa;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
+  margin: 20px auto;
+  text-align: center;
+}
+
+#user-info p {
+  font-size: 18px;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+#user-name {
+  font-weight: bold;
+  color: #007bff;
+}
+
+button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background 0.3s;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+#participant-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 15px;
+}
+
+#participant-list li {
+  background: #e9ecef;
+  padding: 8px;
+  border-radius: 5px;
+  margin: 5px 0;
+  font-size: 14px;
+}
+
+    </style>
+  </head>
   <body>
+    <div id="g_id_onload"
+      data-client_id="481771670669-ke6ldh4hsj1rumfdbtv7jd2vjspvquh2.apps.googleusercontent.com"
+      data-callback="handleCredentialResponse">
+    </div>
+    <div class="g_id_signin" data-type="standard"></div>
+
+    <div id="user-info" style="display:none;">
+      <p>Đăng nhập thành công! Chào, <span id="user-name"></span></p>
+      <button onclick="joinCall()">Tham gia cuộc gọi</button>
+      <ul id="participant-list"></ul>
+    </div>
+
     <script>
-      call = window.Daily.createFrame({
-        showLeaveButton: true,
-        iframeStyle: {
-          position: "fixed",
-          top: "0",
-          left: "0",
-          width: "100%",
-          height: "100%",
-        },
-      });
-      call.join({ url: "https://minhduc169.daily.co/c0a2vgyDBqCLTQgh6jeV" });
+      let userName = "";
+      let callFrame;
+
+      function handleCredentialResponse(response) {
+        const idToken = response.credential;
+        const payload = JSON.parse(atob(idToken.split('.')[1]));
+        userName = payload.name;
+        document.getElementById("user-name").innerText = decodeURIComponent(escape(userName));
+
+        document.getElementById("g_id_onload").style.display = "none";
+        document.querySelector(".g_id_signin").style.display = "none";
+        document.getElementById("user-info").style.display = "block";
+      }
+
+      function joinCall() {
+        callFrame = window.Daily.createFrame({
+          showLeaveButton: true,
+          iframeStyle: {
+            position: 'fixed',
+            top: '0',
+            left: '0',
+            width: '100%',
+            height: '100%',
+          },
+        });
+
+        callFrame.join({
+        url: 'https://nhom7.daily.co/6qT3zLrV89duL89YzuF9',
+        userName: decodeURIComponent(escape(userName)) // Fix lỗi UTF-8
+        });
+
+
+        callFrame.on("participant-joined", (e) => {
+          updateParticipants(e.participant);
+        });
+      }
+
+      function updateParticipants(participant) {
+        const list = document.getElementById("participant-list");
+        const item = document.createElement("li");
+        item.innerText = participant.user_name || "Người dùng ẩn danh";
+        list.appendChild(item);
+      }
     </script>
   </body>
 </html>
+
